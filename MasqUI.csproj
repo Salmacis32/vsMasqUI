@@ -489,7 +489,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="Core.cs" />
+		<Compile Include="ButtonNavigatorPatches.cs" />
+		<Compile Include="MasqUICore.cs" />
+		<Compile Include="GameManagerPatches.cs" />
+		<Compile Include="OptionsControllerPatches.cs" />
 	</ItemGroup>
 	
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
