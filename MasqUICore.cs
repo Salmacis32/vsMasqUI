@@ -52,7 +52,6 @@ namespace MasqUI
 
         [HarmonyPatch(nameof(ButtonNavigator.Start))]
         [HarmonyPostfix]
-        [HarmonyWrapSafe]
         public static void ButtonNavStart(ButtonNavigator __instance)
         {
             if (__instance.SelectionType != SelectableUI.SelectableType.BUTTON) return;
@@ -83,7 +82,6 @@ namespace MasqUI
         /// </remarks>
         [HarmonyPatch(nameof(GameManager.InitializeGameSessionPostLoad))]
         [HarmonyPostfix]
-        [HarmonyWrapSafe]
         public static void Load(GameManager __instance)
         {
             if (CurrentGameConfig == null) CurrentGameConfig = (__instance.PlayerOptions.CurrentAdventureSaveData != null)
@@ -109,7 +107,6 @@ namespace MasqUI
         /// </remarks>
         [HarmonyPatch(nameof(GameManager.ResetGameSession))]
         [HarmonyPrefix]
-        [HarmonyWrapSafe]
         public static void ResetGameSession(GameManager __instance)
         {
             ResetCustomContent();
