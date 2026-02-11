@@ -3,8 +3,10 @@ using Il2CppDoozy.Engine.Extensions;
 using Il2CppVampireSurvivors;
 using Il2CppVampireSurvivors.Data;
 using Il2CppVampireSurvivors.Framework;
+using Il2CppVampireSurvivors.Objects.Projectiles;
 using Il2CppVampireSurvivors.UI;
 using MelonLoader;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -18,6 +20,7 @@ namespace MasqUI
         public override void OnInitializeMelon()
         {
             LoggerInstance.Msg("Initialized.");
+            HarmonyInstance.Patch(LevelUpItemUIPatches.Update(), postfix: new HarmonyMethod(typeof(LevelUpItemUIPatches).GetMethod(nameof(LevelUpItemUIPatches.ColorBox))));
         }
 
         public override void OnDeinitializeMelon()
@@ -27,35 +30,25 @@ namespace MasqUI
 
     }
 
-    [HarmonyPatch(typeof(ButtonNavigator))]
-    public static class ButtonNavigatorPatches
+    public static class LevelUpItemUIPatches
     {
-        private static ColorBlock colors;
-        private static Action<RectTransform> UIButtonSelected = (rTrans) =>
+        public static MethodInfo Update()
         {
-            if (rTrans.gameObject != null && GM.Core?.PlayerOptions?.MainGameConfig != null)
-            {
-                GameObject go = rTrans.gameObject;
-                if (go.active && go.TryGetComponent(out LevelUpItemUI ui) && go.TryGetComponent(out Button button))
-                {
-                    var index = (GM.Core.InteractingPlayer != null) ? GM.Core.InteractingPlayer._PlayerIndex : 0;
-                    Color playerCol = GameManagerPatches.PlayerColors[index];
-                    colors = button.colors; colors.selectedColor = playerCol;
-                    button.colors = colors;
-                }
-            }
-        };
+            var arr = new MethodInfo[1];
+            var methods = AccessTools.GetDeclaredMethods(typeof(SelectableUI));
+            var onlyTypes = methods.Where(x => x.DeclaringType.Name == nameof(SelectableUI));
 
-        public static void Deinitialize()
-        {
+            return onlyTypes.Single(x => x.Name.Equals(nameof(SelectableUI.OnSelect)));
         }
-
-        [HarmonyPatch(nameof(ButtonNavigator.Start))]
-        [HarmonyPostfix]
-        public static void ButtonNavStart(ButtonNavigator __instance)
+        private static ColorBlock colors;
+        public static void ColorBox(SelectableUI __instance)
         {
-            if (__instance.SelectionType != SelectableUI.SelectableType.BUTTON) return;
-            SelectableUI.add_UIButtonSelected(UIButtonSelected);
+            if (GM.Core?.PlayerOptions?.MainGameConfig == null || !__instance.isSelected || !__instance.TryCast<LevelUpItemUI>()) return;
+            var button = __instance.GetComponent<Button>();
+            var index = (GM.Core.InteractingPlayer != null) ? GM.Core.InteractingPlayer._PlayerIndex : 0;
+            Color playerCol = GameManagerPatches.PlayerColors[index];
+            colors = button.colors; colors.selectedColor = playerCol;
+            button.colors = colors;
         }
     }
 
@@ -121,7 +114,7 @@ namespace MasqUI
 
         private static void ResetCustomContent()
         {
-            Array.Clear(PlayerColors);
+            System.Array.Clear(PlayerColors);
             CurrentGameConfig = null;
         }
     }
